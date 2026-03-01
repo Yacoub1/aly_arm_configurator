@@ -11,21 +11,11 @@ header {
   position: relative;
   flex-shrink: 0;
 }
-
 .logo-mark {
-  width: 36px; height: 36px;
-  border: 2px solid var(--accent);
-  display: grid; place-items: center;
-  position: relative; flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  background: none;
 }
-.logo-mark::after {
-  content: '';
-  position: absolute;
-  width: 16px; height: 16px;
-  border: 2px solid var(--accent2);
-  transform: rotate(45deg);
-}
-
 .header-title {
   font-size: 18px; font-weight: 800;
   letter-spacing: 0.12em; text-transform: uppercase; color: #fff;
