@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot name="{{ robot.robot_name }}" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Base -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.1 0.1 {{ robot.base_height }}"/>
+      </geometry>
+    </visual>
+  </link>
+
+  {% set previous_link = "base_link" %}
+  {% set previous_length = robot.base_height %}
+
+  {% for joint in robot.joints %}
+
+  <!-- Link -->
+  <link name="link_{{ loop.index }}">
+    <visual>
+      <origin xyz="0 0 {{ joint.length/2 }}" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="{{ joint.length }}" radius="0.02"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- Joint -->
+  <joint name="joint_{{ loop.index }}" type="{{ joint.type }}">
+    <parent link="{{ previous_link }}"/>
+    <child link="link_{{ loop.index }}"/>
+    <origin xyz="0 0 {{ previous_length }}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="{{ joint.limit_lower }}"
+           upper="{{ joint.limit_upper }}"
+           effort="10"
+           velocity="1"/>
+  </joint>
+
+  {% set previous_link = "link_" + loop.index|string %}
+  {% set previous_length = joint.length %}
+  {% endfor %}
+
+</robot>

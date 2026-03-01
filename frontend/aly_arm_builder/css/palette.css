@@ -1,0 +1,54 @@
+/* ── Palette (left panel) ────────────────────────────────────── */
+.app-body {
+  display: flex; flex: 1;
+  overflow: hidden;
+  position: relative; z-index: 1;
+}
+
+.palette {
+  width: 220px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+}
+.palette::-webkit-scrollbar       { width: 4px; }
+.palette::-webkit-scrollbar-thumb { background: var(--border); }
+
+.palette-section { padding: 14px 14px 6px; }
+
+.palette-section-title {
+  font-family: var(--mono); font-size: 9px; color: var(--accent);
+  letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.palette-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.palette-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; margin-bottom: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: grab;
+  transition: border-color 0.2s, transform 0.15s;
+  user-select: none;
+}
+.palette-item:hover          { border-color: var(--muted); transform: translateX(3px); }
+.palette-item:active         { cursor: grabbing; }
+.palette-item.dragging-source{ opacity: 0.4; }
+
+.pi-color { width: 6px; height: 32px; flex-shrink: 0; border-radius: 1px; }
+.pi-info  { flex: 1; min-width: 0; }
+.pi-name  { font-family: var(--mono); font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pi-meta  { font-size: 9px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+.pi-dim   {
+  font-family: var(--mono); font-size: 9px; color: var(--accent);
+  background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.15);
+  padding: 1px 5px; flex-shrink: 0;
+}
+
+.palette-tip {
+  padding: 10px;
+  border: 1px dashed var(--border);
+  font-size: 11px; color: var(--muted); line-height: 1.5;
+}

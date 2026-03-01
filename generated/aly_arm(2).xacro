@@ -1,0 +1,278 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="aly_arm">
+
+  <!-- Base offset -->
+  <xacro:property name="j0_x" value="0.0030" />
+  <!-- Configuration offset angles -->
+  <xacro:property name="phi_1" value="0.0000" />
+  <xacro:property name="phi_2" value="0.0000" />
+  <xacro:property name="phi_3" value="0.0000" />
+  <xacro:property name="phi_4" value="1.5700" />
+  <xacro:property name="phi_5" value="0.0000" />
+  <xacro:property name="phi_6" value="0.0000" />
+  <xacro:property name="phi_7" value="1.5700" />
+  <xacro:property name="phi_8" value="0.0000" />
+  <xacro:property name="phi_9" value="0.0000" />
+
+  <link name="world"/>
+
+  <joint name="world_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <visual><geometry>
+      <mesh filename="package://aly_arm_0_description/meshes/base_fixture-Body.dae" scale="1 1 1"/>
+    </geometry></visual>
+    <collision><geometry>
+      <mesh filename="package://aly_arm_0_description/meshes/base_fixture-Body.dae" scale="1 1 1"/>
+    </geometry></collision>
+  </link>
+
+  <joint name="base_holder_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_holder_link"/>
+    <origin xyz="${j0_x} 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="motor_holder_link">
+    <visual><geometry>
+      <mesh filename="package://aly_arm_0_description/meshes/base_motorholder_90deg_V4-Body.dae" scale="1 1 1"/>
+    </geometry></visual>
+    <collision><geometry>
+      <mesh filename="package://aly_arm_0_description/meshes/base_motorholder_90deg_V4-Body.dae" scale="1 1 1"/>
+    </geometry></collision>
+  </link>
+
+  <joint name="config_joint_0" type="fixed">
+    <parent link="motor_holder_link"/>
+    <child link="motor_holder_link_0"/>
+    <origin xyz="0 0 0.0804" rpy="0 ${phi_1} 0"/>
+  </joint>
+
+  <link name="motor_holder_link_0">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/base_motorholder_90deg_V4-Body.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/base_motorholder_90deg_V4-Body.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="config_joint_1" type="fixed">
+    <parent link="motor_holder_link_0"/>
+    <child link="link_motor_1"/>
+    <origin xyz="0 0 0" rpy="0 ${phi_2} 0"/>
+  </joint>
+
+  <link name="link_motor_1">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/motor_assembly.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/motor_assembly.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_0" type="revolute">
+    <parent link="link_motor_1"/>
+    <child link="link_active_1"/>
+    <origin xyz="0.036 0 0" rpy="0 ${phi_2} 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10.0000" lower="-1.2500" upper="1.2000" velocity="1.0000"/>
+  </joint>
+
+  <link name="link_active_1">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="config_joint_2" type="fixed">
+    <parent link="link_active_1"/>
+    <child link="link_active_2"/>
+    <origin xyz="0.036 0 0" rpy="0 ${phi_3} 0"/>
+  </joint>
+
+  <link name="link_active_2">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="config_joint_3" type="fixed">
+    <parent link="link_active_2"/>
+    <child link="link_passive_3"/>
+    <origin xyz="0.0360 0 0" rpy="${phi_4} 0 0"/>
+  </joint>
+
+  <link name="link_passive_3">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_passive_0deg_hirth_18_V3-Body.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_passive_0deg_hirth_18_V3-Body.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="config_joint_4" type="fixed">
+    <parent link="link_passive_3"/>
+    <child link="link_motor_4"/>
+    <origin xyz="0 0 0" rpy="0 ${phi_5} 0"/>
+  </joint>
+
+  <link name="link_motor_4">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/motor_assembly.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/motor_assembly.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_1" type="revolute">
+    <parent link="link_motor_4"/>
+    <child link="link_active_4"/>
+    <origin xyz="0.036 0 0" rpy="0 ${phi_5} 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10.0000" lower="-1.2500" upper="1.2000" velocity="1.0000"/>
+  </joint>
+
+  <link name="link_active_4">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="config_joint_5" type="fixed">
+    <parent link="link_active_4"/>
+    <child link="link_active_5"/>
+    <origin xyz="0.036 0 0" rpy="0 ${phi_6} 0"/>
+  </joint>
+
+  <link name="link_active_5">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="config_joint_6" type="fixed">
+    <parent link="link_active_5"/>
+    <child link="link_passive_6"/>
+    <origin xyz="0.0360 0 0" rpy="${phi_7} 0 0"/>
+  </joint>
+
+  <link name="link_passive_6">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_passive_0deg_hirth_18_V3-Body.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_passive_0deg_hirth_18_V3-Body.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="config_joint_7" type="fixed">
+    <parent link="link_passive_6"/>
+    <child link="link_motor_7"/>
+    <origin xyz="0 0 0" rpy="0 ${phi_8} 0"/>
+  </joint>
+
+  <link name="link_motor_7">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_2" type="prismatic">
+    <parent link="link_motor_7"/>
+    <child link="link_active_7"/>
+    <origin xyz="0.036 0 0" rpy="0 ${phi_8} 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10.0000" lower="0.0000" upper="0.0450" velocity="1.0000"/>
+  </joint>
+
+  <link name="link_active_7">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_3" type="prismatic">
+    <parent link="link_active_7"/>
+    <child link="rack_link"/>
+    <origin xyz="0.045 -0.030 0.0" rpy="3.14 -1.57 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10.0000" lower="0.0000" upper="0.0450" velocity="1.0000"/>
+  </joint>
+
+  <link name="rack_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/rack_assebmly-Part.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/rack_assebmly-Part.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="config_joint_8" type="fixed">
+    <parent link="rack_link"/>
+    <child link="pen_holder_link"/>
+    <origin xyz="0 0.020 0.022" rpy="0 0 ${phi_9}"/>
+  </joint>
+
+  <link name="pen_holder_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/pen_holder_assembly.dae" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/pen_holder_assembly.dae" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+
+</robot>

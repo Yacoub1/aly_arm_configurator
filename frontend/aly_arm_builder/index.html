@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALY ARM — Robot Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/palette.css">
+  <link rel="stylesheet" href="css/canvas.css">
+  <link rel="stylesheet" href="css/panels.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════════ -->
+<header>
+  <div class="logo-mark"></div>
+  <div>
+    <div class="header-title">ALY <span>ARM</span> — Builder</div>
+    <div class="header-sub">DRAG &amp; DROP ROBOT CHAIN CONFIGURATOR // ROS2</div>
+  </div>
+  <div class="header-actions">
+    <button class="hbtn danger"  onclick="onClearChain()">Clear</button>
+    <button class="hbtn"         onclick="onExportXacro()">Preview Xacro</button>
+    <button class="hbtn viewer"  onclick="openViewer()">▶ View Robot</button>
+    <button class="hbtn primary" onclick="onDownloadXacro()">↓ Download</button>
+    <button class="hbtn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">☀</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP BODY  (palette | canvas | config panel)
+════════════════════════════════════════════════════════════ -->
+<div class="app-body">
+
+  <!-- ── Palette ───────────────────────────────────────────── -->
+  <div class="palette" id="palette">
+
+    <div class="palette-section">
+      <div class="palette-section-title">DOF Modules</div>
+
+      <div class="palette-item" draggable="true" data-type="joint_revolute"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#ff6b35"></div>
+        <div class="pi-info">
+          <div class="pi-name">Revolute Module</div>
+          <div class="pi-meta">motor_asm → active hirth [R]</div>
+        </div>
+        <div class="pi-dim">R</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="joint_prismatic"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#ffd700"></div>
+        <div class="pi-info">
+          <div class="pi-name">Prismatic Module</div>
+          <div class="pi-meta">motor_asm → active hirth [P]</div>
+        </div>
+        <div class="pi-dim">P</div>
+      </div>
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-section-title">Connectors</div>
+
+      <div class="palette-item" draggable="true" data-type="passive_link"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#00e5ff"></div>
+        <div class="pi-info">
+          <div class="pi-name">Passive Hirth Link</div>
+          <div class="pi-meta">hirth coupler passive · 36mm</div>
+        </div>
+        <div class="pi-dim">36mm</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="active_link"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#ff9955"></div>
+        <div class="pi-info">
+          <div class="pi-name">Active Hirth Link</div>
+          <div class="pi-meta">standalone active side</div>
+        </div>
+        <div class="pi-dim">—</div>
+      </div>
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-section-title">Motor Holders</div>
+
+      <div class="palette-item" draggable="true" data-type="motor_holder_90_77"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#44ff88"></div>
+        <div class="pi-info">
+          <div class="pi-name">Motor Holder 90°</div>
+          <div class="pi-meta">base_motorholder_90deg_V4</div>
+        </div>
+        <div class="pi-dim">77mm</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="motor_holder_90_56"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#44ff88"></div>
+        <div class="pi-info">
+          <div class="pi-name">Motor Holder 90°</div>
+          <div class="pi-meta">base_motorholder_90deg_V4</div>
+        </div>
+        <div class="pi-dim">56mm</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="motor_holder_0"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#88ff44"></div>
+        <div class="pi-info">
+          <div class="pi-name">Motor Holder 0°</div>
+          <div class="pi-meta">inline configuration</div>
+        </div>
+        <div class="pi-dim">inline</div>
+      </div>
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-section-title">End Effectors</div>
+
+      <div class="palette-item" draggable="true" data-type="rack_pen"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#bb88ff"></div>
+        <div class="pi-info">
+          <div class="pi-name">Rack + Pen Holder</div>
+          <div class="pi-meta">rack_assembly + pen_holder</div>
+        </div>
+        <div class="pi-dim">EE</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="tool_flange"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#ff88bb"></div>
+        <div class="pi-info">
+          <div class="pi-name">Tool Flange</div>
+          <div class="pi-meta">generic end effector</div>
+        </div>
+        <div class="pi-dim">EE</div>
+      </div>
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-section-title">Pattern Guide</div>
+      <div class="palette-tip">
+        <span style="color:var(--accent2)">R/P Module</span> →<br>
+        <span style="color:var(--accent)">Passive Hirth</span> →<br>
+        <span style="color:var(--accent2)">R/P Module</span> → ...<br><br>
+        Motor holders are mid-chain supports.<br>Add an end effector last.
+      </div>
+    </div>
+
+  </div><!-- /palette -->
+
+  <!-- ── Canvas ────────────────────────────────────────────── -->
+  <div class="canvas-wrap" id="canvas-wrap">
+    <div class="chain-canvas" id="chain-canvas">
+
+      <!-- Fixed base — always present, never removable -->
+      <div class="chain-base" id="chain-base">
+        <span class="chain-base-icon">⬡</span>
+        <div class="chain-base-info">
+          <div class="chain-base-name">world → base_link</div>
+          <div class="chain-base-sub">Fixed base · adjust x offset and RPY rotation below</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:end">
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:2px">j0_x (m)</div>
+            <input type="number" id="j0_x_input" value="0.003" step="0.0001"
+              style="width:72px;background:var(--surface2);border:1px solid var(--border);
+                    color:var(--accent);font-family:var(--mono);font-size:11px;
+                    padding:4px 6px;outline:none;-moz-appearance:textfield;text-align:right">
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:2px">roll (rad)</div>
+            <input type="number" id="base_roll" value="0" step="0.001"
+              style="width:72px;background:var(--surface2);border:1px solid var(--border);
+                    color:var(--accent);font-family:var(--mono);font-size:11px;
+                    padding:4px 6px;outline:none;-moz-appearance:textfield;text-align:right">
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:2px">pitch (rad)</div>
+            <input type="number" id="base_pitch" value="0" step="0.001"
+              style="width:72px;background:var(--surface2);border:1px solid var(--border);
+                    color:var(--accent);font-family:var(--mono);font-size:11px;
+                    padding:4px 6px;outline:none;-moz-appearance:textfield;text-align:right">
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:2px">yaw (rad)</div>
+            <input type="number" id="base_yaw" value="0" step="0.001"
+              style="width:72px;background:var(--surface2);border:1px solid var(--border);
+                    color:var(--accent);font-family:var(--mono);font-size:11px;
+                    padding:4px 6px;outline:none;-moz-appearance:textfield;text-align:right">
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector from base into the drop area -->
+      <div class="chain-connector" id="base-connector">
+        <div class="connector-line"></div>
+        <div class="connector-label">fixed</div>
+        <div class="connector-line"></div>
+      </div>
+
+      <!-- Initial drop zone (renderer will manage these dynamically) -->
+      <div class="drop-zone" id="drop-zone-end"
+           ondragover="dzDragOver(event,'drop-zone-end')"
+           ondragleave="dzDragLeave(event,'drop-zone-end')"
+           ondrop="dzDrop(event,'drop-zone-end')">
+        ＋ Drop element here
+      </div>
+
+    </div>
+  </div><!-- /canvas -->
+
+  <!-- ── Config Panel ──────────────────────────────────────── -->
+  <div class="config-panel" id="config-panel">
+    <div class="cp-header">Segment Properties</div>
+    <div class="cp-empty" id="cp-empty">
+      <div class="cp-empty-icon">⬡</div>
+      <div class="cp-empty-text">Select a segment on the chain to configure its properties.</div>
+    </div>
+    <div class="cp-content" id="cp-content" style="display:none"></div>
+  </div>
+
+</div><!-- /app-body -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     VIEWER MODAL
+════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="viewer-modal" onclick="closeViewer(event)">
+  <div class="modal viewer-modal">
+
+    <div class="modal-header">
+      3D Robot Viewer
+      <button class="modal-close" onclick="closeViewerDirect()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="vw-endpoint-bar">
+        <label>Viewer endpoint</label>
+        <input type="text" id="vw-endpoint"
+          value="http://localhost:8000/preview"
+          placeholder="http://localhost:8000/preview">
+        <button class="vw-send-btn" onclick="sendToViewer()">▶ Send &amp; View</button>
+      </div>
+
+      <div class="vw-area">
+        <div id="vw-placeholder" class="vw-placeholder">
+          <div class="vw-placeholder-icon">🤖</div>
+          <div class="vw-placeholder-title">No Preview Loaded</div>
+          <div class="vw-placeholder-desc">
+            Enter your backend endpoint and click
+            <strong style="color:var(--accent2)">▶ Send &amp; View</strong>.
+            <br>
+            <span class="vw-placeholder-code">POST text/xml → { url | html | error }</span>
+          </div>
+        </div>
+
+        <div id="vw-loading" class="vw-loading">
+          <div class="vw-spinner"></div>
+          <div class="vw-loading-text">CONNECTING TO VIEWER...</div>
+        </div>
+
+        <div id="vw-error" class="vw-error">
+          <div class="vw-error-title">⚠ VIEWER UNAVAILABLE</div>
+          <div id="vw-error-msg" class="vw-error-msg"></div>
+          <div class="vw-error-hint">Make sure your backend is running and CORS is enabled.</div>
+        </div>
+
+        <div id="viewer" style="width:100%; height:500px;"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">
+        Backend contract: POST xacro as text/xml → JSON { "url":"..." } or { "html":"..." }
+      </span>
+      <button class="modal-btn" onclick="closeViewerDirect()">Close</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     XACRO PREVIEW MODAL
+════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="xacro-modal" onclick="closeXacroModal(event)">
+  <div class="modal">
+
+    <div class="modal-header">
+      Generated Xacro
+      <button class="modal-close" onclick="closeXacroModalDirect()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <pre class="modal-code" id="modal-code"></pre>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-btn"         onclick="onCopyXacro()">Copy</button>
+      <button class="modal-btn primary" onclick="onDownloadXacro()">↓ Download</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     TOAST
+════════════════════════════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCRIPTS  (load order matters — deps before consumers)
+════════════════════════════════════════════════════════════ -->
+<script src="js/elementDefs.js"></script>
+<script src="js/chain.js"></script>
+<script src="js/dragDrop.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/xacroGenerator.js"></script>
+<script type="module" src="js/viewer.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

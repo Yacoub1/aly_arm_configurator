@@ -1,0 +1,56 @@
+/* ── Header ──────────────────────────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10,12,16,0.95);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.logo-mark {
+  width: 36px; height: 36px;
+  border: 2px solid var(--accent);
+  display: grid; place-items: center;
+  position: relative; flex-shrink: 0;
+}
+.logo-mark::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  border: 2px solid var(--accent2);
+  transform: rotate(45deg);
+}
+
+.header-title {
+  font-size: 18px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #fff;
+}
+.header-title span { color: var(--accent); }
+
+.header-sub {
+  font-size: 10px; color: var(--muted);
+  font-family: var(--mono); letter-spacing: 0.08em; margin-top: 1px;
+}
+
+.header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+.hbtn {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--muted);
+  cursor: pointer; transition: all 0.2s;
+}
+.hbtn:hover          { border-color: var(--accent); color: var(--accent); }
+.hbtn.primary        { background: var(--accent); color: #000; border-color: var(--accent); }
+.hbtn.primary:hover  { background: #fff; border-color: #fff; }
+.hbtn.danger         { border-color: #ff4444; color: #ff4444; }
+.hbtn.danger:hover   { background: #ff4444; color: #000; }
+.hbtn.viewer         { border-color: var(--accent2); color: var(--accent2); }
+.hbtn.viewer:hover   { background: var(--accent2); color: #000; }

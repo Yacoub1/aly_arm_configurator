@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALY ARM — Robot Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: #111418;
+  --surface2: #161b22;
+  --border: #1e2530;
+  --accent: #00e5ff;
+  --accent2: #ff6b35;
+  --accent3: #44ff88;
+  --text: #c8d8e8;
+  --muted: #4a5a6a;
+  --mono: 'Share Tech Mono', monospace;
+  --sans: 'Barlow', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ── HEADER ──────────────────────────────── */
+header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10,12,16,0.95);
+  backdrop-filter: blur(8px);
+  z-index: 10; position: relative; flex-shrink: 0;
+}
+.logo-mark {
+  width: 36px; height: 36px;
+  border: 2px solid var(--accent);
+  display: grid; place-items: center; position: relative; flex-shrink: 0;
+}
+.logo-mark::after { content: ''; position: absolute; width: 16px; height: 16px; border: 2px solid var(--accent2); transform: rotate(45deg); }
+.header-title { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; }
+.header-title span { color: var(--accent); }
+.header-sub { font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: 0.08em; margin-top: 1px; }
+.header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.hbtn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 7px 14px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s;
+}
+.hbtn:hover { border-color: var(--accent); color: var(--accent); }
+.hbtn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+.hbtn.primary:hover { background: #fff; border-color: #fff; }
+.hbtn.danger { border-color: #ff4444; color: #ff4444; }
+.hbtn.danger:hover { background: #ff4444; color: #000; }
+
+/* ── MAIN LAYOUT ─────────────────────────── */
+.app-body { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 1; }
+
+/* ── PALETTE (left) ──────────────────────── */
+.palette {
+  width: 220px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+}
+.palette::-webkit-scrollbar { width: 4px; }
+.palette::-webkit-scrollbar-thumb { background: var(--border); }
+
+.palette-section { padding: 14px 14px 6px; }
+.palette-section-title {
+  font-family: var(--mono); font-size: 9px; color: var(--accent);
+  letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.palette-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.palette-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; margin-bottom: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: grab; transition: border-color 0.2s, transform 0.15s;
+  user-select: none; position: relative;
+}
+.palette-item:hover { border-color: var(--muted); transform: translateX(3px); }
+.palette-item:active { cursor: grabbing; }
+.palette-item.dragging-source { opacity: 0.4; }
+
+.pi-color {
+  width: 6px; height: 32px; flex-shrink: 0; border-radius: 1px;
+}
+.pi-info { flex: 1; min-width: 0; }
+.pi-name { font-family: var(--mono); font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pi-meta { font-size: 9px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+.pi-dim {
+  font-family: var(--mono); font-size: 9px; color: var(--accent);
+  background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.15);
+  padding: 1px 5px; flex-shrink: 0;
+}
+
+.palette-tip {
+  margin: 8px 14px 14px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  font-size: 11px; color: var(--muted); line-height: 1.5;
+}
+
+/* ── CANVAS (center) ─────────────────────── */
+.canvas-wrap {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 24px 20px 40px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.canvas-wrap::-webkit-scrollbar { width: 5px; }
+.canvas-wrap::-webkit-scrollbar-thumb { background: var(--border); }
+
+.chain-canvas {
+  width: 100%; max-width: 680px;
+  min-height: 200px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0;
+}
+
+/* base (non-removable) */
+.chain-base {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent3);
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+  position: relative;
+}
+.chain-base-icon { font-size: 22px; }
+.chain-base-info { flex: 1; }
+.chain-base-name { font-family: var(--mono); font-size: 12px; color: var(--accent3); }
+.chain-base-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* connector arrow between blocks */
+.chain-connector {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; width: 100%;
+}
+.connector-line { width: 2px; height: 16px; background: var(--border); }
+.connector-label {
+  font-family: var(--mono); font-size: 9px; color: var(--muted);
+  letter-spacing: 0.08em; padding: 2px 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* drop zone */
+.drop-zone {
+  width: 100%; padding: 12px;
+  border: 1px dashed var(--muted);
+  text-align: center;
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  transition: all 0.2s; cursor: default;
+  margin: 4px 0;
+}
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(0,229,255,0.04);
+  color: var(--accent);
+}
+.drop-zone.hidden { display: none; }
+
+/* chain segment block */
+.chain-segment {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: border-color 0.2s;
+  animation: segIn 0.25s ease both;
+}
+.chain-segment:hover { border-color: var(--muted); }
+.chain-segment.selected { border-color: var(--accent); }
+.chain-segment.dragging { opacity: 0.35; }
+
+@keyframes segIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.seg-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+}
+.seg-header:active { cursor: grabbing; }
+
+.seg-drag-handle { color: var(--muted); font-size: 14px; cursor: grab; flex-shrink: 0; }
+.seg-color-bar { width: 5px; height: 28px; border-radius: 1px; flex-shrink: 0; }
+.seg-title { flex: 1; }
+.seg-type  { font-family: var(--mono); font-size: 11px; color: var(--text); }
+.seg-idx   { font-size: 9px; color: var(--muted); font-family: var(--mono); margin-top: 1px; }
+.seg-actions { display: flex; gap: 6px; }
+.seg-btn {
+  font-family: var(--mono); font-size: 9px; padding: 3px 8px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  cursor: pointer; transition: all 0.15s; letter-spacing: 0.06em;
+}
+.seg-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.seg-btn.del:hover { border-color: #ff4444; color: #ff4444; }
+.seg-btn.cfg { }
+
+/* sub-links inside a segment */
+.seg-body { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+
+.sub-link {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+.sub-link-indent { color: var(--muted); font-family: var(--mono); font-size: 11px; white-space: pre; }
+.sub-link-dot { width: 7px; height: 7px; flex-shrink: 0; transform: rotate(45deg); }
+.sub-link-name { font-family: var(--mono); font-size: 11px; flex: 1; }
+.sub-link-joint {
+  font-family: var(--mono); font-size: 9px; padding: 1px 6px;
+  border: 1px solid; text-transform: uppercase;
+}
+
+/* joint type colors */
+.jt-fixed    { border-color: #2a3a4a; color: var(--muted); }
+.jt-revolute { border-color: var(--accent2); color: var(--accent2); }
+.jt-prismatic{ border-color: #ffd700; color: #ffd700; }
+
+/* ── CONFIG PANEL (right) ─────────────────── */
+.config-panel {
+  width: 260px; flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.config-panel::-webkit-scrollbar { width: 4px; }
+.config-panel::-webkit-scrollbar-thumb { background: var(--border); }
+
+.cp-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 10px; color: var(--accent);
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+.cp-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; padding: 24px; text-align: center;
+}
+.cp-empty-icon { font-size: 32px; opacity: 0.25; }
+.cp-empty-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+.cp-content { padding: 14px 16px; flex: 1; }
+
+.cp-section { margin-bottom: 20px; }
+.cp-section:last-child { margin-bottom: 0; }
+.cp-section-title {
+  font-family: var(--mono); font-size: 9px; color: var(--muted);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px;
+}
+
+.cp-field { margin-bottom: 10px; }
+.cp-field label { display: block; font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.cp-field input[type="number"],
+.cp-field select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--mono); font-size: 12px; padding: 6px 8px; outline: none;
+  -moz-appearance: textfield;
+}
+.cp-field input[type="number"]::-webkit-inner-spin-button { display: none; }
+.cp-field input[type="number"]:focus,
+.cp-field select:focus { border-color: var(--accent); color: var(--accent); }
+.cp-field select { cursor: pointer; }
+.cp-field select option { background: var(--surface2); }
+
+.cp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.cp-joint-type {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.jtype-btn {
+  font-family: var(--mono); font-size: 10px; padding: 5px 10px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  cursor: pointer; transition: all 0.15s; letter-spacing: 0.06em; flex: 1; text-align: center;
+}
+.jtype-btn.active-rev { border-color: var(--accent2); color: var(--accent2); background: rgba(255,107,53,0.08); }
+.jtype-btn.active-pris { border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,0.06); }
+
+.apply-btn {
+  width: 100%; margin-top: 12px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 10px; border: none; background: var(--accent); color: #000; cursor: pointer;
+  transition: background 0.2s;
+}
+.apply-btn:hover { background: #fff; }
+
+/* ── XACRO MODAL ─────────────────────────── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8); z-index: 100;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 90%; max-width: 860px; max-height: 90vh;
+  display: flex; flex-direction: column;
+  animation: modalIn 0.25s ease both;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase;
+}
+.modal-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+.modal-close:hover { color: #fff; }
+.modal-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.modal-code {
+  flex: 1; overflow: auto; margin: 0;
+  background: #070a0d;
+  padding: 20px;
+  font-family: var(--mono); font-size: 11.5px; line-height: 1.75;
+  color: #8aa8c8; white-space: pre; tab-size: 2;
+}
+.modal-code::-webkit-scrollbar { width: 6px; height: 6px; }
+.modal-code::-webkit-scrollbar-thumb { background: var(--border); }
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+.modal-btn {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 9px 18px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s;
+}
+.modal-btn:hover { border-color: var(--accent); color: var(--accent); }
+.modal-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+.modal-btn.primary:hover { background: #fff; border-color: #fff; }
+
+/* Syntax */
+.xml-tag { color: #4ec9b0; } .xml-attr { color: #9cdcfe; } .xml-value { color: #ce9178; } .xml-comment { color: #4a5a6a; font-style: italic; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--accent); color: #000; font-family: var(--mono); font-size: 11px; padding: 10px 18px; z-index: 200; opacity: 0; transform: translateY(10px); transition: all 0.25s; letter-spacing: 0.08em; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@keyframes fadeIn { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-mark"></div>
+  <div>
+    <div class="header-title">ALY <span>ARM</span> — Builder</div>
+    <div class="header-sub">DRAG & DROP ROBOT CHAIN CONFIGURATOR // ROS2</div>
+  </div>
+  <div class="header-actions">
+    <button class="hbtn danger" onclick="clearChain()">Clear</button>
+    <button class="hbtn" onclick="exportXacro()">Preview Xacro</button>
+    <button class="hbtn" onclick="openViewer()" style="border-color:var(--accent2);color:var(--accent2)">▶ View Robot</button>
+    <button class="hbtn primary" onclick="downloadXacro()">↓ Download</button>
+  </div>
+</header>
+
+<!-- APP BODY -->
+<div class="app-body">
+
+  <!-- PALETTE -->
+  <div class="palette" id="palette">
+    <div class="palette-section">
+      <div class="palette-section-title">DOF Modules</div>
+
+      <div class="palette-item" draggable="true" data-type="joint_revolute"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#ff6b35"></div>
+        <div class="pi-info">
+          <div class="pi-name">Revolute Module</div>
+          <div class="pi-meta">motor_asm → active hirth [R]</div>
+        </div>
+        <div class="pi-dim">R</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="joint_prismatic"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#ffd700"></div>
+        <div class="pi-info">
+          <div class="pi-name">Prismatic Module</div>
+          <div class="pi-meta">motor_asm → active hirth [P]</div>
+        </div>
+        <div class="pi-dim">P</div>
+      </div>
+
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-section-title">Connectors</div>
+
+      <div class="palette-item" draggable="true" data-type="passive_link"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#00e5ff"></div>
+        <div class="pi-info">
+          <div class="pi-name">Passive Hirth Link</div>
+          <div class="pi-meta">hirth coupler passive · 36mm</div>
+        </div>
+        <div class="pi-dim">36mm</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="active_link"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#ff9955"></div>
+        <div class="pi-info">
+          <div class="pi-name">Active Hirth Link</div>
+          <div class="pi-meta">standalone active side</div>
+        </div>
+        <div class="pi-dim">—</div>
+      </div>
+
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-section-title">Motor Holders</div>
+
+      <div class="palette-item" draggable="true" data-type="motor_holder_90_77"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#44ff88"></div>
+        <div class="pi-info">
+          <div class="pi-name">Motor Holder 90°</div>
+          <div class="pi-meta">base_motorholder_90deg_V4</div>
+        </div>
+        <div class="pi-dim">77mm</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="motor_holder_90_56"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#44ff88"></div>
+        <div class="pi-info">
+          <div class="pi-name">Motor Holder 90°</div>
+          <div class="pi-meta">base_motorholder_90deg_V4</div>
+        </div>
+        <div class="pi-dim">56mm</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="motor_holder_0"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#88ff44"></div>
+        <div class="pi-info">
+          <div class="pi-name">Motor Holder 0°</div>
+          <div class="pi-meta">inline configuration</div>
+        </div>
+        <div class="pi-dim">inline</div>
+      </div>
+
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-section-title">End Effectors</div>
+
+      <div class="palette-item" draggable="true" data-type="rack_pen"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#bb88ff"></div>
+        <div class="pi-info">
+          <div class="pi-name">Rack + Pen Holder</div>
+          <div class="pi-meta">rack_assembly + pen_holder</div>
+        </div>
+        <div class="pi-dim">EE</div>
+      </div>
+
+      <div class="palette-item" draggable="true" data-type="tool_flange"
+           ondragstart="paletteDragStart(event)" ondragend="paletteDragEnd(event)">
+        <div class="pi-color" style="background:#ff88bb"></div>
+        <div class="pi-info">
+          <div class="pi-name">Tool Flange</div>
+          <div class="pi-meta">generic end effector</div>
+        </div>
+        <div class="pi-dim">EE</div>
+      </div>
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-section-title">Pattern Guide</div>
+      <div class="palette-tip" style="margin:0 0 14px">
+        <span style="color:var(--accent2)">R/P Module</span> →<br>
+        <span style="color:var(--accent)">Passive Hirth</span> →<br>
+        <span style="color:var(--accent2)">R/P Module</span> → ...<br><br>
+        Motor holders are mid-chain supports. Add an end effector last.
+      </div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas-wrap" id="canvas-wrap">
+    <div class="chain-canvas" id="chain-canvas">
+
+      <!-- Fixed base — always present -->
+      <div class="chain-base" id="chain-base">
+        <span class="chain-base-icon">⬡</span>
+        <div class="chain-base-info">
+          <div class="chain-base-name">world → base_link → motor_holder_link</div>
+          <div class="chain-base-sub">Fixed base chain  ·  j0_x offset configurable</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">j0_x (m)</div>
+          <input type="number" id="j0_x_input" value="0.003" step="0.0001"
+            style="width:72px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:11px;padding:4px 6px;outline:none;-moz-appearance:textfield;text-align:right"
+            oninput="markDirty()">
+        </div>
+      </div>
+
+      <!-- Drop zone at bottom always present -->
+      <div class="chain-connector" id="base-connector">
+        <div class="connector-line"></div>
+        <div class="connector-label">fixed</div>
+        <div class="connector-line"></div>
+      </div>
+
+      <div class="drop-zone" id="drop-zone-end"
+           ondragover="dzDragOver(event,'drop-zone-end')"
+           ondragleave="dzDragLeave(event,'drop-zone-end')"
+           ondrop="dzDrop(event,'drop-zone-end')">
+        ＋ Drop element here
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CONFIG PANEL -->
+  <div class="config-panel" id="config-panel">
+    <div class="cp-header">Segment Properties</div>
+    <div class="cp-empty" id="cp-empty">
+      <div class="cp-empty-icon">⬡</div>
+      <div class="cp-empty-text">Select a segment on the chain to configure its properties.</div>
+    </div>
+    <div class="cp-content" id="cp-content" style="display:none"></div>
+  </div>
+
+</div>
+
+<!-- VIEWER MODAL -->
+<div class="modal-overlay" id="viewer-modal" onclick="closeViewer(event)">
+  <div class="modal" style="max-width:1000px;width:95%">
+    <div class="modal-header">
+      3D Robot Viewer
+      <button class="modal-close" onclick="closeViewerDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- endpoint bar -->
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+        <label style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap">Viewer endpoint</label>
+        <input type="text" id="vw-endpoint" value="http://localhost:8000/preview"
+          placeholder="http://localhost:8000/preview"
+          style="flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:7px 12px;outline:none">
+        <button onclick="sendToViewer()"
+          style="font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;padding:8px 18px;border:1px solid var(--accent2);background:transparent;color:var(--accent2);cursor:pointer;white-space:nowrap;transition:all 0.2s"
+          onmouseover="this.style.background='var(--accent2)';this.style.color='#000'"
+          onmouseout="this.style.background='transparent';this.style.color='var(--accent2)'">
+          ▶ Send &amp; View
+        </button>
+      </div>
+
+      <!-- viewer area -->
+      <div style="position:relative;background:#070a0d;min-height:460px;display:flex;align-items:center;justify-content:center;flex:1">
+
+        <!-- placeholder -->
+        <div id="vw-placeholder" style="text-align:center;padding:40px">
+          <div style="font-size:52px;opacity:0.2;margin-bottom:18px">🤖</div>
+          <div style="font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">No Preview Loaded</div>
+          <div style="font-size:12px;color:var(--muted);max-width:400px;line-height:1.75">
+            Enter your backend endpoint and click <strong style="color:var(--accent2)">▶ Send &amp; View</strong>.<br><br>
+            <code style="font-family:var(--mono);font-size:10px;color:var(--border);border:1px solid var(--border);padding:3px 8px">POST text/xml → { url | html | error }</code>
+          </div>
+        </div>
+
+        <!-- loading -->
+        <div id="vw-loading" style="display:none;flex-direction:column;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.12em">CONNECTING TO VIEWER...</div>
+        </div>
+
+        <!-- error -->
+        <div id="vw-error" style="display:none;flex-direction:column;align-items:center;gap:10px;padding:32px;text-align:center">
+          <div style="font-family:var(--mono);font-size:12px;color:#ff6666;letter-spacing:0.1em">⚠ VIEWER UNAVAILABLE</div>
+          <div id="vw-error-msg" style="font-family:var(--mono);font-size:11px;color:var(--muted);max-width:360px;line-height:1.6"></div>
+          <div style="font-size:11px;color:var(--muted)">Make sure your backend is running and CORS is enabled.</div>
+        </div>
+
+        <!-- iframe -->
+        <iframe id="vw-iframe" title="Robot Viewer"
+          style="display:none;width:100%;height:460px;border:none;background:#000"
+          allowfullscreen></iframe>
+
+      </div>
+    </div>
+    <div class="modal-footer" style="font-family:var(--mono);font-size:10px;color:var(--muted);justify-content:space-between;align-items:center">
+      <span>Backend contract: POST xacro as text/xml → JSON { "url":"..." } or { "html":"..." }</span>
+      <button class="modal-btn" onclick="closeViewerDirect()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- XACRO MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      Generated Xacro
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <pre class="modal-code" id="modal-code"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="copyXacro()">Copy</button>
+      <button class="modal-btn primary" onclick="downloadXacro()">↓ Download</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  DATA MODEL
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * ELEMENT_DEFS — palette item → sub-links definition.
+ * Base chain (world→base_link→motor_holder_link) is hardcoded in buildXacro().
+ * The chain starts FROM motor_holder_link. Do NOT add another motor_holder_link here.
+ */
+const ELEMENT_DEFS = {
+
+  // ── A complete DOF module: motor assembly + active hirth output ───────────
+  // The motor assembly is reached via a fixed config_joint from the previous link.
+  // The active hirth is then the revolute/prismatic child.
+  joint_revolute: {
+    label: 'Revolute Joint Module',
+    color: '#ff6b35',
+    subLinks: [
+      { role: 'motor_assembly', mesh: 'motor_assembly.dae',                         jointAfter: 'fixed'    },
+      { role: 'active',         mesh: 'lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae', jointAfter: 'revolute', jointAxis: '0 0 1' },
+    ],
+    defaults: { phi: 0.0, lower: -1.25, upper: 1.20, effort: 10.0, velocity: 1.0, jointType: 'revolute' },
+  },
+
+  joint_prismatic: {
+    label: 'Prismatic Joint Module',
+    color: '#ffd700',
+    subLinks: [
+      { role: 'motor_assembly', mesh: 'motor_assembly_presmatic_joint.dae',           jointAfter: 'fixed'     },
+      { role: 'active',         mesh: 'lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae', jointAfter: 'prismatic', jointAxis: '0 0 1' },
+    ],
+    defaults: { phi: 0.0, lower: 0.0, upper: 0.045, effort: 10.0, velocity: 1.0, jointType: 'prismatic' },
+  },
+
+  // ── Passive hirth coupler — fixed bridging link between two DOF modules ───
+  passive_link: {
+    label: 'Passive Hirth Link',
+    color: '#00e5ff',
+    subLinks: [
+      { role: 'passive', mesh: 'lnk_passive_0deg_hirth_18_V3-Body.dae', jointAfter: 'fixed', offsetX: 0.036 },
+    ],
+    defaults: { phi: 1.570 },
+  },
+
+  // ── Standalone active hirth (e.g. when you need an extra output link) ─────
+  active_link: {
+    label: 'Active Hirth Link',
+    color: '#ff9955',
+    subLinks: [
+      { role: 'active', mesh: 'lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae', jointAfter: 'fixed' },
+    ],
+    defaults: { phi: 0.0 },
+  },
+
+  // ── Motor holder variants (additional mid-chain holders) ──────────────────
+  motor_holder_90_77: {
+    label: 'Motor Holder 90° (77mm)',
+    color: '#44ff88',
+    subLinks: [
+      { role: 'motor_holder', mesh: 'base_motorholder_90deg_V4-Body.dae', jointAfter: 'fixed' },
+    ],
+    defaults: { phi: 0.0, height: 0.0804 },
+  },
+
+  motor_holder_90_56: {
+    label: 'Motor Holder 90° (56mm)',
+    color: '#44ff88',
+    subLinks: [
+      { role: 'motor_holder', mesh: 'base_motorholder_90deg_V4-Body.dae', jointAfter: 'fixed' },
+    ],
+    defaults: { phi: 0.0, height: 0.060 },
+  },
+
+  motor_holder_0: {
+    label: 'Motor Holder 0° (inline)',
+    color: '#88ff44',
+    subLinks: [
+      { role: 'motor_holder', mesh: 'base_motorholder_90deg_V4-Body.dae', jointAfter: 'fixed' },
+    ],
+    defaults: { phi: 0.0, height: 0.0804 },
+  },
+
+  // ── End effectors ─────────────────────────────────────────────────────────
+  rack_pen: {
+    label: 'Rack + Pen Holder',
+    color: '#bb88ff',
+    subLinks: [
+      { role: 'rack',       mesh: 'rack_assebmly-Part.dae',  jointAfter: 'prismatic', jointAxis: '0 0 1' },
+      { role: 'pen_holder', mesh: 'pen_holder_assembly.dae', jointAfter: 'fixed' },
+    ],
+    defaults: { phi: 0.0, lower: 0.0, upper: 0.045, effort: 10.0, velocity: 1.0, jointType: 'prismatic' },
+  },
+
+  tool_flange: {
+    label: 'Tool Flange',
+    color: '#ff88bb',
+    subLinks: [
+      { role: 'tool_flange', mesh: 'tool_flange.dae', jointAfter: null },
+    ],
+    defaults: { phi: 0.0 },
+  },
+};
+
+// ── Live chain state ──────────────────────────────────────
+let chain = [];       // array of segment objects
+let selectedId = null;
+let nextId = 1;
+let dragSourceId = null;    // for reordering
+let dragFromPalette = null; // type string from palette drag
+
+// ══════════════════════════════════════════════════════════════
+//  PALETTE DRAG
+// ══════════════════════════════════════════════════════════════
+function paletteDragStart(e) {
+  dragFromPalette = e.currentTarget.dataset.type;
+  dragSourceId = null;
+  e.currentTarget.classList.add('dragging-source');
+  e.dataTransfer.effectAllowed = 'copy';
+}
+function paletteDragEnd(e) {
+  e.currentTarget.classList.remove('dragging-source');
+  dragFromPalette = null;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DROP ZONES
+// ══════════════════════════════════════════════════════════════
+function dzDragOver(e, dzId) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = dragSourceId ? 'move' : 'copy';
+  document.getElementById(dzId)?.classList.add('drag-over');
+}
+function dzDragLeave(e, dzId) {
+  document.getElementById(dzId)?.classList.remove('drag-over');
+}
+function dzDrop(e, dzId) {
+  e.preventDefault();
+  document.getElementById(dzId)?.classList.remove('drag-over');
+
+  // Insert index: 'drop-zone-end' = append, 'dz-{idx}' = insert before idx
+  let insertIdx = chain.length;
+  if (dzId.startsWith('dz-')) {
+    insertIdx = parseInt(dzId.replace('dz-', ''));
+  }
+
+  if (dragFromPalette) {
+    addSegment(dragFromPalette, insertIdx);
+  } else if (dragSourceId !== null) {
+    reorderSegment(dragSourceId, insertIdx);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SEGMENT DRAG (reorder)
+// ══════════════════════════════════════════════════════════════
+function segDragStart(e, id) {
+  dragSourceId = id;
+  dragFromPalette = null;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => {
+    document.querySelector(`.chain-segment[data-id="${id}"]`)?.classList.add('dragging');
+  }, 0);
+}
+function segDragEnd(e, id) {
+  dragSourceId = null;
+  document.querySelector(`.chain-segment[data-id="${id}"]`)?.classList.remove('dragging');
+}
+
+function reorderSegment(id, toIdx) {
+  const fromIdx = chain.findIndex(s => s.id === id);
+  if (fromIdx === -1) return;
+  const [seg] = chain.splice(fromIdx, 1);
+  const adjusted = toIdx > fromIdx ? toIdx - 1 : toIdx;
+  chain.splice(adjusted, 0, seg);
+  renderChain();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ADD / REMOVE SEGMENTS
+// ══════════════════════════════════════════════════════════════
+function addSegment(type, insertIdx) {
+  const def = ELEMENT_DEFS[type];
+  if (!def) return;
+  const seg = {
+    id: nextId++,
+    type,
+    label: def.label,
+    color: def.color,
+    props: { ...def.defaults },
+  };
+  chain.splice(insertIdx, 0, seg);
+  renderChain();
+  selectSegment(seg.id);
+  showToast(def.label.toUpperCase() + ' ADDED');
+}
+
+function removeSegment(id) {
+  chain = chain.filter(s => s.id !== id);
+  if (selectedId === id) { selectedId = null; renderConfigPanel(null); }
+  renderChain();
+}
+
+function clearChain() {
+  if (chain.length === 0) return;
+  if (!confirm('Clear entire chain?')) return;
+  chain = [];
+  selectedId = null;
+  renderConfigPanel(null);
+  renderChain();
+  showToast('CHAIN CLEARED');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER CHAIN
+// ══════════════════════════════════════════════════════════════
+function renderChain() {
+  const canvas = document.getElementById('chain-canvas');
+
+  // Remove all segments and drop zones (keep base and base-connector)
+  [...canvas.querySelectorAll('.chain-segment, .drop-zone, .chain-connector:not(#base-connector)')].forEach(el => el.remove());
+
+  chain.forEach((seg, idx) => {
+    // Inter-segment drop zone
+    const dz = makeDZ(`dz-${idx}`);
+    canvas.appendChild(dz);
+
+    // Connector
+    const conn = makeConnector('fixed');
+    canvas.appendChild(conn);
+
+    // Segment block
+    const el = makeSegmentEl(seg, idx);
+    canvas.appendChild(el);
+  });
+
+  // Final drop zone at end
+  const dzEnd = makeDZ('drop-zone-end');
+  canvas.appendChild(dzEnd);
+}
+
+function makeDZ(id) {
+  const dz = document.createElement('div');
+  dz.className = 'drop-zone';
+  dz.id = id;
+  dz.textContent = '＋ Drop element here';
+  dz.ondragover  = e => dzDragOver(e, id);
+  dz.ondragleave = e => dzDragLeave(e, id);
+  dz.ondrop      = e => dzDrop(e, id);
+  return dz;
+}
+
+function makeConnector(jtype) {
+  const div = document.createElement('div');
+  div.className = 'chain-connector';
+  const jtColor = jtype === 'revolute' ? 'var(--accent2)' : jtype === 'prismatic' ? '#ffd700' : 'var(--muted)';
+  div.innerHTML = `
+    <div class="connector-line"></div>
+    <div class="connector-label" style="border-color:${jtColor};color:${jtColor}">${jtype}</div>
+    <div class="connector-line"></div>`;
+  return div;
+}
+
+function makeSegmentEl(seg, idx) {
+  const def = ELEMENT_DEFS[seg.type];
+  const jtype = seg.props.jointType || (def.subLinks[0]?.jointAfter) || 'fixed';
+  const jtColor = jtype === 'revolute' ? 'var(--accent2)' : jtype === 'prismatic' ? '#ffd700' : 'var(--border)';
+  const isSelected = seg.id === selectedId;
+
+  const el = document.createElement('div');
+  el.className = 'chain-segment' + (isSelected ? ' selected' : '');
+  el.dataset.id = seg.id;
+
+  // Segment index label
+  const segLabel = `SEG-${String(idx + 1).padStart(2,'0')}`;
+
+  // Sub-link rows
+  const subHTML = def.subLinks.map((sl, si) => {
+    const indent = si === 0 ? '└─' : '   └─';
+    const jt = si === def.subLinks.length - 1 ? jtype : 'fixed';
+    const jtClass = `jt-${jt}`;
+    const linkName = resolveRoleName(sl.role, idx);
+    return `<div class="sub-link">
+      <span class="sub-link-indent">${indent}</span>
+      <div class="sub-link-dot" style="background:${seg.color}"></div>
+      <span class="sub-link-name" style="color:${seg.color}">${linkName}</span>
+      <span class="sub-link-joint ${jtClass}">${jt}</span>
+    </div>`;
+  }).join('');
+
+  // Properties summary
+  const propSummary = buildPropSummary(seg);
+
+  el.innerHTML = `
+    <div class="seg-header" draggable="true"
+         ondragstart="segDragStart(event,${seg.id})"
+         ondragend="segDragEnd(event,${seg.id})"
+         onclick="selectSegment(${seg.id})">
+      <span class="seg-drag-handle" title="Drag to reorder">⠿</span>
+      <div class="seg-color-bar" style="background:${seg.color}"></div>
+      <div class="seg-title">
+        <div class="seg-type">${seg.label}</div>
+        <div class="seg-idx">${segLabel} · ${propSummary}</div>
+      </div>
+      <div class="seg-actions">
+        <button class="seg-btn cfg" onclick="event.stopPropagation();selectSegment(${seg.id})">cfg</button>
+        <button class="seg-btn del" onclick="event.stopPropagation();removeSegment(${seg.id})">✕</button>
+      </div>
+    </div>
+    <div class="seg-body">${subHTML}</div>`;
+
+  return el;
+}
+
+function resolveRoleName(role, idx) {
+  const map = {
+    active: `link_active_${idx}`,
+    passive: `link_passive_${idx}`,
+    motor_holder: `motor_holder_link_${idx}`,
+    motor_assembly: `link_motor_${idx}`,
+    rack: `rack_link`,
+    pen_holder: `pen_holder_link`,
+    tool_flange: `tool_flange_link`,
+  };
+  return map[role] || `link_${role}_${idx}`;
+}
+
+function buildPropSummary(seg) {
+  const p = seg.props;
+  const parts = [];
+  if (p.phi !== undefined) parts.push(`φ=${parseFloat(p.phi).toFixed(3)}`);
+  if (p.lower !== undefined) parts.push(`[${p.lower},${p.upper}]`);
+  if (p.height !== undefined) parts.push(`h=${p.height*1000|0}mm`);
+  return parts.join(' · ');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SELECTION & CONFIG PANEL
+// ══════════════════════════════════════════════════════════════
+function selectSegment(id) {
+  selectedId = id;
+  // Update visual selection
+  document.querySelectorAll('.chain-segment').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.chain-segment[data-id="${id}"]`)?.classList.add('selected');
+  const seg = chain.find(s => s.id === id);
+  renderConfigPanel(seg);
+}
+
+function renderConfigPanel(seg) {
+  const empty   = document.getElementById('cp-empty');
+  const content = document.getElementById('cp-content');
+
+  if (!seg) {
+    empty.style.display = '';
+    content.style.display = 'none';
+    content.innerHTML = '';
+    return;
+  }
+
+  empty.style.display = 'none';
+  content.style.display = 'block';
+
+  const def  = ELEMENT_DEFS[seg.type];
+  const p    = seg.props;
+  const jtype = p.jointType || def.subLinks[0]?.jointAfter || 'fixed';
+
+  let html = `<div class="cp-section">
+    <div class="cp-section-title">${seg.label}</div>`;
+
+  // Phi offset
+  if (p.phi !== undefined) {
+    html += `<div class="cp-field">
+      <label>Config Offset φ (rad)</label>
+      <input type="number" id="cp_phi" value="${p.phi}" step="0.001">
+    </div>`;
+  }
+
+  // Height for motor holders
+  if (p.height !== undefined) {
+    html += `<div class="cp-field">
+      <label>Height (m)</label>
+      <input type="number" id="cp_height" value="${p.height}" step="0.001">
+    </div>`;
+  }
+
+  html += `</div>`;
+
+  // Joint config (if has DOF)
+  if (p.lower !== undefined) {
+    html += `<div class="cp-section">
+      <div class="cp-section-title">Joint</div>
+      <div class="cp-field">
+        <label>Type</label>
+        <div class="cp-joint-type">
+          <button class="jtype-btn ${jtype==='revolute'?'active-rev':''}" onclick="setJointType(${seg.id},'revolute')">Revolute</button>
+          <button class="jtype-btn ${jtype==='prismatic'?'active-pris':''}" onclick="setJointType(${seg.id},'prismatic')">Prismatic</button>
+        </div>
+      </div>
+      <div class="cp-row">
+        <div class="cp-field"><label>Lower</label><input type="number" id="cp_lower" value="${p.lower}" step="0.01"></div>
+        <div class="cp-field"><label>Upper</label><input type="number" id="cp_upper" value="${p.upper}" step="0.01"></div>
+      </div>
+      <div class="cp-row">
+        <div class="cp-field"><label>Effort (Nm)</label><input type="number" id="cp_effort" value="${p.effort}" step="0.1"></div>
+        <div class="cp-field"><label>Velocity</label><input type="number" id="cp_velocity" value="${p.velocity}" step="0.01"></div>
+      </div>
+    </div>`;
+  }
+
+  html += `<button class="apply-btn" onclick="applySegmentProps(${seg.id})">Apply Changes</button>`;
+
+  content.innerHTML = html;
+}
+
+function setJointType(id, jtype) {
+  const seg = chain.find(s => s.id === id);
+  if (!seg) return;
+  seg.props.jointType = jtype;
+  renderConfigPanel(seg);
+  renderChain();
+  selectSegment(id);
+}
+
+function applySegmentProps(id) {
+  const seg = chain.find(s => s.id === id);
+  if (!seg) return;
+  const p = seg.props;
+
+  const get = elId => { const el = document.getElementById(elId); return el ? parseFloat(el.value) : undefined; };
+
+  if (p.phi !== undefined)      p.phi      = get('cp_phi') ?? p.phi;
+  if (p.height !== undefined)   p.height   = get('cp_height') ?? p.height;
+  if (p.lower !== undefined)    p.lower    = get('cp_lower') ?? p.lower;
+  if (p.upper !== undefined)    p.upper    = get('cp_upper') ?? p.upper;
+  if (p.effort !== undefined)   p.effort   = get('cp_effort') ?? p.effort;
+  if (p.velocity !== undefined) p.velocity = get('cp_velocity') ?? p.velocity;
+
+  renderChain();
+  selectSegment(id);
+  showToast('PROPERTIES APPLIED');
+}
+
+function markDirty() { /* future: unsaved indicator */ }
+
+// ══════════════════════════════════════════════════════════════
+//  XACRO GENERATION  (fixed: interleaved joint+link, no duplication)
+// ══════════════════════════════════════════════════════════════
+function buildXacro() {
+  const j0x = parseFloat(document.getElementById('j0_x_input').value) || 0.003;
+  const f = v => parseFloat(v).toFixed(4);
+
+  // ── 1. collect phi properties ──────────────────────────────
+  const propLines = [];
+  chain.forEach((seg, idx) => {
+    if (seg.props.phi !== undefined)
+      propLines.push(`  <xacro:property name="phi_${idx+1}" value="${f(seg.props.phi)}" />`);
+  });
+
+  // ── 2. build interleaved body (joint immediately followed by its child link) ──
+  // The base already hardcodes: world → base_link → motor_holder_link
+  // So the first element in the chain starts FROM motor_holder_link.
+  // motor_holder segments in the chain represent the per-DOF motor assembly
+  // that lives ABOVE motor_holder_link — they should NOT re-emit motor_holder_link.
+
+  let body = '';
+  let parentLink = 'motor_holder_link';
+  let cfgIdx  = 0;   // counter for config_joint_N (fixed)
+  let dofIdx  = 0;   // counter for joint_N (revolute/prismatic)
+
+  chain.forEach((seg, segIdx) => {
+    const def    = ELEMENT_DEFS[seg.type];
+    const p      = seg.props;
+    const phiKey = `phi_${segIdx + 1}`;
+
+    def.subLinks.forEach((sl, slIdx) => {
+      const isLast = slIdx === def.subLinks.length - 1;
+      // jtype: use sl.jointAfter as canonical. If it's the DOF link (non-fixed jointAfter)
+      // and the segment has a jointType override, apply it (e.g. switching revolute↔prismatic).
+      const slJtype  = sl.jointAfter || 'fixed';
+      const jtype    = (slJtype !== 'fixed' && p.jointType) ? p.jointType : slJtype;
+      const isDOF    = jtype !== 'fixed';
+
+      const jointName = isDOF ? `joint_${dofIdx}` : `config_joint_${cfgIdx}`;
+      const childName = resolveRoleName(sl.role, segIdx);
+
+      // ── origin ───────────────────────────────────────────
+      let originStr;
+      switch (sl.role) {
+        case 'motor_holder':
+          // height comes from the holder's j1_z (stored in props.height)
+          originStr = `<origin xyz="0 0 ${f(p.height || 0.0804)}" rpy="0 \${${phiKey}} 0"/>`;
+          break;
+        case 'motor_assembly':
+          originStr = `<origin xyz="0 0 0" rpy="0 \${${phiKey}} 0"/>`;
+          break;
+        case 'passive':
+          originStr = `<origin xyz="${f(sl.offsetX || 0.036)} 0 0" rpy="\${${phiKey}} 0 0"/>`;
+          break;
+        case 'active':
+          originStr = `<origin xyz="0.036 0 0" rpy="0 \${${phiKey}} 0"/>`;
+          break;
+        case 'rack':
+          originStr = `<origin xyz="0.045 -0.030 0.0" rpy="3.14 -1.57 0"/>`;
+          break;
+        case 'pen_holder':
+          originStr = `<origin xyz="0 0.020 0.022" rpy="0 0 \${${phiKey}}"/>`;
+          break;
+        default:
+          originStr = `<origin xyz="0 0 0" rpy="0 0 \${${phiKey}}"/>`;
+      }
+
+      // ── axis + limit (DOF joints only) ───────────────────
+      const axisLimit = isDOF
+        ? `\n    <axis xyz="${sl.jointAxis || '0 0 1'}"/>\n    <limit effort="${f(p.effort||10)}" lower="${f(p.lower??-1.25)}" upper="${f(p.upper??1.20)}" velocity="${f(p.velocity||1.0)}"/>`
+        : '';
+
+      // ── visual rpy ────────────────────────────────────────
+      const visRpy = sl.role === 'passive'        ? '0 1.57 0'
+                   : sl.role === 'motor_assembly' ? '1.57 0 0'
+                   : sl.role === 'motor_holder'   ? '0 0 0'
+                   : '0 0 0';
+
+      // ── emit: joint then link (interleaved = valid URDF) ─
+      body += `
+  <joint name="${jointName}" type="${jtype}">
+    <parent link="${parentLink}"/>
+    <child link="${childName}"/>
+    ${originStr}${axisLimit}
+  </joint>
+
+  <link name="${childName}">
+    <visual>
+      <origin xyz="0 0 0" rpy="${visRpy}"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/${sl.mesh}" scale="1 1 1"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${visRpy}"/>
+      <geometry><mesh filename="package://aly_arm_0_description/meshes/${sl.mesh}" scale="1 1 1"/></geometry>
+    </collision>
+  </link>
+`;
+      // advance counters
+      if (isDOF) dofIdx++; else cfgIdx++;
+      parentLink = childName;
+    });
+  });
+
+  const propsBlock = propLines.length
+    ? `\n  <!-- Configuration offset angles -->\n${propLines.join('\n')}\n`
+    : '';
+
+  return `<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="aly_arm">
+
+  <!-- Base offset -->
+  <xacro:property name="j0_x" value="${f(j0x)}" />${propsBlock}
+  <link name="world"/>
+
+  <joint name="world_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <visual><geometry>
+      <mesh filename="package://aly_arm_0_description/meshes/base_fixture-Body.dae" scale="1 1 1"/>
+    </geometry></visual>
+    <collision><geometry>
+      <mesh filename="package://aly_arm_0_description/meshes/base_fixture-Body.dae" scale="1 1 1"/>
+    </geometry></collision>
+  </link>
+
+  <joint name="base_holder_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_holder_link"/>
+    <origin xyz="\${j0_x} 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="motor_holder_link">
+    <visual><geometry>
+      <mesh filename="package://aly_arm_0_description/meshes/base_motorholder_90deg_V4-Body.dae" scale="1 1 1"/>
+    </geometry></visual>
+    <collision><geometry>
+      <mesh filename="package://aly_arm_0_description/meshes/base_motorholder_90deg_V4-Body.dae" scale="1 1 1"/>
+    </geometry></collision>
+  </link>
+${body}
+</robot>`;
+}
+
+function syntaxHighlight(xml) {
+  return xml
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(&lt;\/?[\w:]+)/g,'<span class="xml-tag">$1</span>')
+    .replace(/(\s[\w:]+)=/g,'<span class="xml-attr">$1</span>=')
+    .replace(/="([^"]*)"/g,'="<span class="xml-value">$1</span>"')
+    .replace(/(&lt;!--[\s\S]*?--&gt;)/g,'<span class="xml-comment">$1</span>');
+}
+
+function exportXacro() {
+  if (chain.length === 0) { showToast('ADD ELEMENTS TO THE CHAIN FIRST'); return; }
+  const xml = buildXacro();
+  document.getElementById('modal-code').innerHTML = syntaxHighlight(xml);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function downloadXacro() {
+  if (chain.length === 0) { showToast('ADD ELEMENTS TO THE CHAIN FIRST'); return; }
+  const xml = buildXacro();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([xml], {type:'text/xml'}));
+  a.download = 'aly_arm.xacro';
+  a.click();
+  showToast('DOWNLOADING...');
+}
+
+function copyXacro() {
+  if (chain.length === 0) return;
+  navigator.clipboard.writeText(buildXacro()).then(() => showToast('COPIED TO CLIPBOARD'));
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════════════
+function closeModal(e) { if (e.target === document.getElementById('modal-overlay')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+// ══════════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  VIEWER
+// ══════════════════════════════════════════════════════════════
+function openViewer() {
+  if (chain.length === 0) { showToast('BUILD A CHAIN FIRST'); return; }
+  document.getElementById('viewer-modal').classList.add('open');
+  resetViewerState();
+}
+function closeViewer(e) {
+  if (!e || e.target === document.getElementById('viewer-modal')) closeViewerDirect();
+}
+function closeViewerDirect() {
+  document.getElementById('viewer-modal').classList.remove('open');
+  resetViewerState();
+}
+function resetViewerState() {
+  document.getElementById('vw-placeholder').style.display = '';
+  document.getElementById('vw-loading').style.display = 'none';
+  document.getElementById('vw-error').style.display = 'none';
+  const iframe = document.getElementById('vw-iframe');
+  iframe.style.display = 'none';
+  iframe.src = ''; iframe.srcdoc = '';
+}
+async function sendToViewer() {
+  const endpoint = document.getElementById('vw-endpoint').value.trim();
+  if (!endpoint) { showToast('SET AN ENDPOINT FIRST'); return; }
+  const xml = buildXacro();
+  document.getElementById('vw-placeholder').style.display = 'none';
+  document.getElementById('vw-error').style.display = 'none';
+  document.getElementById('vw-iframe').style.display = 'none';
+  document.getElementById('vw-loading').style.display = 'flex';
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: xml,
+    });
+    document.getElementById('vw-loading').style.display = 'none';
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const iframe = document.getElementById('vw-iframe');
+    if (data.url)       iframe.src    = data.url;
+    else if (data.html) iframe.srcdoc = data.html;
+    else throw new Error('Backend returned neither url nor html.');
+    iframe.style.display = 'block';
+    showToast('VIEWER CONNECTED');
+  } catch(err) {
+    document.getElementById('vw-loading').style.display = 'none';
+    document.getElementById('vw-error').style.display = 'flex';
+    document.getElementById('vw-error-msg').textContent = err.message;
+    showToast('VIEWER ERROR');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT — default chain matches aly_arm.xacro (no motor_holder segment —
+//  motor_holder_link is already in the hardcoded base)
+// ══════════════════════════════════════════════════════════════
+function loadExampleChain() {
+  const initial = [
+    { type: 'joint_revolute',  props: { phi: 0.0,   lower: -1.25, upper: 1.20,  effort: 10, velocity: 1.0, jointType: 'revolute'  } },
+    { type: 'passive_link',    props: { phi: 1.570 } },
+    { type: 'joint_revolute',  props: { phi: 0.0,   lower: -1.25, upper: 1.20,  effort: 10, velocity: 1.0, jointType: 'revolute'  } },
+    { type: 'passive_link',    props: { phi: 1.570 } },
+    { type: 'joint_revolute',  props: { phi: 0.0,   lower: -1.25, upper: 1.20,  effort: 10, velocity: 1.0, jointType: 'revolute'  } },
+    { type: 'passive_link',    props: { phi: 1.570 } },
+    { type: 'rack_pen',        props: { phi: 1.570, lower: 0.0,   upper: 0.045, effort: 10, velocity: 1.0, jointType: 'prismatic' } },
+  ];
+  initial.forEach(s => {
+    chain.push({ id: nextId++, type: s.type, label: ELEMENT_DEFS[s.type].label, color: ELEMENT_DEFS[s.type].color, props: { ...s.props } });
+  });
+  renderChain();
+}
+
+loadExampleChain();
+</script>
+</body>
+</html>

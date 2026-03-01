@@ -1,0 +1,59 @@
+/* ── Design tokens & base reset ─────────────────────────────── */
+/* ── Dark mode (default) ─────── */
+:root {
+  --bg:      #0a0c10;
+  --surface: #111418;
+  --surface2:#161b22;
+  --border:  #1e2530;
+  --accent:  #00e5ff;
+  --accent2: #ff6b35;
+  --accent3: #44ff88;
+  --text:    #c8d8e8;
+  --muted:   #4a5a6a;
+  --grid-line: rgba(0,229,255,0.025);
+  --mono: 'Share Tech Mono', monospace;
+  --sans: 'Barlow', sans-serif;
+}
+
+/* ── Light mode ──────────────── */
+:root.light {
+  --bg:      #f0f2f5;
+  --surface: #ffffff;
+  --surface2:#e8ecf0;
+  --border:  #c8d0da;
+  --accent:  #0088aa;
+  --accent2: #d94f1a;
+  --accent3: #1a8a44;
+  --text:    #1a2230;
+  --muted:   #7a8898;
+  --grid-line: rgba(0,100,160,0.05);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+@keyframes segIn    { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes modalIn  { from { opacity:0; transform:scale(0.96) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
+@keyframes fadeIn   { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:translateX(0); } }
+@keyframes spin     { to   { transform: rotate(360deg); } }
