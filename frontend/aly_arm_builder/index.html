@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="css/palette.css">
   <link rel="stylesheet" href="css/canvas.css">
   <link rel="stylesheet" href="css/panels.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="js/ros2pkg.js"></script>
 </head>
 <body>
 
@@ -30,6 +32,7 @@
     <button class="hbtn"         onclick="onExportXacro()">Preview Xacro</button>
     <button class="hbtn viewer"  onclick="openViewer()">▶ View Robot</button>
     <button class="hbtn primary" onclick="onDownloadXacro()">↓ Download</button>
+    <button class="hbtn primary" onclick="onDownloadROS2Pkg()">↓ ROS2 Pkg</button>
     <button class="hbtn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">☀</button>
   </div>
 </header>
@@ -227,6 +230,7 @@
     <div class="cp-empty" id="cp-empty">
       <div class="cp-empty-icon">⬡</div>
       <div class="cp-empty-text">Select a segment on the chain to configure its properties.</div>
+      <input id="robot_name_input" type="text" value="aly_arm" placeholder="Robot name">
     </div>
     <div class="cp-content" id="cp-content" style="display:none"></div>
   </div>
