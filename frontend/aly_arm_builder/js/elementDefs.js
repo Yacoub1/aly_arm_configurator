@@ -72,7 +72,7 @@ const ELEMENT_DEFS = {
     label: 'Prismatic Joint Module',
     color: '#ffd700',
     subLinks: [
-      { role: 'motor_assembly_p', mesh: 'motor_assembly_presmatic_joint.dae',           jointAfter: 'fixed'     },
+      { role: 'motor_assembly_p', mesh: 'motor_assembly_prismatic_joint.dae',           jointAfter: 'fixed'     },
       { role: 'rack',       mesh: 'rack_assebmly-Part.dae',   jointAfter: 'prismatic', jointAxis: '0 0 1' },
     ],
     defaults: { phi: 0.0, lower: 0.0, upper: 0.045, effort: 10.0, velocity: 1.0, jointType: 'prismatic' },

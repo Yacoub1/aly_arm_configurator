@@ -105,11 +105,11 @@
   <link name="link_4">
     <visual>
       <origin xyz="0 0 0" rpy="3.14 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
+      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_prismatic_joint.dae" scale="1 1 1"/></geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="3.14 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
+      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_prismatic_joint.dae" scale="1 1 1"/></geometry>
     </collision>
   </link>
 
@@ -166,11 +166,11 @@
   <link name="link_7">
     <visual>
       <origin xyz="0 0 0" rpy="3.14 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
+      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_prismatic_joint.dae" scale="1 1 1"/></geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="3.14 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
+      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_prismatic_joint.dae" scale="1 1 1"/></geometry>
     </collision>
   </link>
 
