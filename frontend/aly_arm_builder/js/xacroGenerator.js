@@ -3,59 +3,55 @@
  *
  * Generates xacro/URDF from the current chain state.
  *
- * Exact origin rules derived from reference aly_arm_8_.xacro:
+ * Two reference examples drive all origin rules:
+ *   - aly_arm.xacro    (revolute-first chain)
+ *   - aly_arm_8_.xacro (prismatic-first chain with post-prismatic revolute)
+ *
+ * Key rules:
  *
  * motor_assembly_p — FIRST (from holder_link):
- *   joint xyz="0.0 0 ${j1_z}"       rpy="0 ${phi} 0"
- *   visual rpy="1.57 0 0"
+ *   joint xyz="0.0 0 ${j1_z}"  rpy="0 ${phi} 0"    visual rpy="1.57 0 0"
  *
- * rack — FIRST prismatic (from motor_assembly_p):
- *   joint xyz="0.045 0 0.030"        rpy="1.570 0 1.57"
- *   visual rpy="0 0 0"
+ * motor_assembly_p — SUBSEQUENT:
+ *   joint xyz="0.036 0 0"       rpy="0 0 ${phi}"    visual rpy="3.14 0 0"
  *
- * passive — after rack (postPrismatic, first passive):
- *   joint xyz="0 0 0.0036"           rpy="0 0 ${phi}"
- *   visual rpy="0 0 0"
- *   THEN emits intermediate joint:
- *     joint xyz="0 0 0.036"          rpy="0 -1.5 0"  → empty link
- *     joint xyz="0 0 0"              rpy="0 0 ${phi_next}" → motor_assembly link
+ * motor_assembly — FIRST (from holder_link):
+ *   joint xyz="0 0 ${j1_z}"    rpy="0 ${phi} 0"    visual rpy="1.57 0 0"
  *
- * motor_assembly — FIRST (from holder_link, revolute path):
- *   joint xyz="0 0 ${j1_z}"         rpy="0 ${phi} 0"
- *   visual rpy="1.57 0 0"
+ * motor_assembly — SUBSEQUENT (from passive, normal revolute path):
+ *   joint xyz="0.036 0 0"       rpy="0 ${phi} 0"    visual rpy="3.14 0 0"
  *
- * motor_assembly — SUBSEQUENT (from passive, revolute path):
- *   joint xyz="0.036 0 0"            rpy="0 ${phi} 0"
- *   visual rpy="3.14 0 0"
+ * motor_assembly — afterPostPrismatic (from intermediate link):
+ *   joint xyz="0 0 0"             rpy="0 0 ${phi}"    visual rpy="0 0 0"
+ *   resets afterPostPrismatic=false
  *
- * motor_assembly — after postPrismatic passive (handled inside passive case):
- *   emitted as part of the passive two-joint block
- *   joint xyz="0 0 0"               rpy="0 0 ${phi}"
- *   visual rpy="0 0 0"
+ * motor_assembly_p — afterPostPrismatic (from intermediate link):
+ *   joint xyz="0 0 0"             rpy="0 0 ${phi}"    visual rpy="3.14 0 0"
+ *   resets afterPostPrismatic=false, sets isFirstPrismatic=true
  *
- * active — FIRST revolute (joint_0, from motor_assembly):
- *   joint xyz="0.019500 0 -0.0040"  rpy="3.140 0 0"
- *   visual rpy="0 0 0"
+ * rack — FIRST prismatic (isFirstPrismatic=true):
+ *   joint xyz="0.045 0 0.030"   rpy="1.570 0 1.57"  visual rpy="0 0 0"
  *
- * active — after postPrismatic (from motor_assembly after passive):
- *   joint xyz="0.019500 -0.003 0.000" rpy="1.57 0 0"
- *   visual rpy="0 0 0"
+ * rack — SUBSEQUENT:
+ *   joint xyz="0.045 -0.030 0.0" rpy="3.14 -1.57 0" visual rpy="0 0 0"
+ *   sets postPrismatic=true
  *
- * active — SUBSEQUENT revolute (joint_1+):
- *   joint xyz="0.019500 0.0040 0"   rpy="-1.57 0 0"
- *   visual rpy="0 0 0"
+ * active — FIRST revolute (!afterPostPrismatic):
+ *   joint xyz="0.019500 0 -0.0040" rpy="3.140 0 0"  visual rpy="0 0 0"
  *
- * passive — normal (after active, revolute path):
- *   joint xyz="0.036 0 0"           rpy="${phi} 0 0"
- *   visual rpy="0 1.57 0"
+ * active — after postPrismatic:
+ *   joint xyz="0.019500 -0.003 0.000" rpy="1.57 0 0" visual rpy="0 0 0"
  *
- * rack — subsequent (not first prismatic):
- *   joint xyz="0.045 -0.030 0.0"    rpy="3.14 -1.57 0"
- *   visual rpy="0 0 0"
+ * active — SUBSEQUENT revolute:
+ *   joint xyz="0.019500 0.0040 0" rpy="-1.57 0 0"   visual rpy="0 0 0"
  *
- * pen_holder:
- *   joint xyz="0 0.020 0.022"       rpy="0 0 ${phi2}"
- *   visual rpy="0 0 0"
+ * passive — normal (after active):
+ *   joint xyz="0.036 0 0"        rpy="${phi} 0 0"    visual rpy="0 1.57 0"
+ *
+ * passive — postPrismatic: emits 2-part block only (motor_assembly/motor_assembly_p handles itself):
+ *   1. passive hirth:      xyz="0 0 0.0036"  rpy="0 0 ${phi}"  visual rpy="0 0 0"
+ *   2. empty intermediate: xyz="0 0 0.036"   rpy="0 -1.5 0"
+ *   sets afterPostPrismatic=true, postPrismatic=false, parentLink=intermediate
  */
 
 function buildXacro() {
@@ -65,7 +61,6 @@ function buildXacro() {
   const baseYaw   = parseFloat(document.getElementById('base_yaw').value)    || 0;
   const f = v => parseFloat(v).toFixed(4);
 
-  // j1_z + holder mesh from chain[0]
   const holderSeg  = chain.find(s => ELEMENT_DEFS[s.type]?.subLinks[0]?.role === 'holder');
   const j1z        = holderSeg?.props?.height ?? 0.0804;
   const holderMesh = holderSeg
@@ -84,7 +79,6 @@ function buildXacro() {
   chain.forEach((seg) => {
     const role0 = ELEMENT_DEFS[seg.type]?.subLinks[0]?.role;
     const entry  = { main: null, penHolder: null };
-
     if (role0 === 'holder') {
       // no phi
     } else if (seg.type === 'rack_pen') {
@@ -96,25 +90,24 @@ function buildXacro() {
       propLines.push(`  <xacro:property name="${phiName}" value="${f(seg.props.phi ?? 0)}" />`);
       entry.main = phiName;
     }
-
     segPhiMap.push(entry);
   });
 
-  // ── State variables ────────────────────────────────────────────────────────
-  let body             = '';
-  let parentLink       = 'holder_link';
-  let cfgIdx           = 0;
-  let dofIdx           = 0;
-  let linkCounter      = 1;
+  // ── State ──────────────────────────────────────────────────────────────────
+  let body                 = '';
+  let parentLink           = 'holder_link';
+  let cfgIdx               = 0;
+  let dofIdx               = 0;
+  let linkCounter          = 1;
   let isFirstMotorAssembly = true;
   let isFirstRevolute      = true;
   let isFirstPrismatic     = false;
-  let postPrismatic        = false;  // true after rack is emitted
-  let afterPostPrismatic   = false;  // true after the passive+intermediate block
+  let postPrismatic        = false;
+  let afterPostPrismatic   = false;
+  let afterPrismaticMotor  = false;   // set by motor_assembly after consuming afterPostPrismatic
   let prevRole             = null;
-  let lastRackName = null;
 
-  // ── Helper: emit a standard joint+link block ───────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
   function emitJointLink(jName, jType, parent, child, origin, axisLimit, mesh, vRpy) {
     body += `
   <joint name="${jName}" type="${jType}">
@@ -136,7 +129,6 @@ function buildXacro() {
 `;
   }
 
-  // ── Helper: emit an empty link ─────────────────────────────────────────────
   function emitEmptyLink(jName, parent, child, origin) {
     body += `
   <joint name="${jName}" type="fixed">
@@ -149,7 +141,7 @@ function buildXacro() {
 `;
   }
 
-  // ── Main chain loop ────────────────────────────────────────────────────────
+  // ── Main loop ──────────────────────────────────────────────────────────────
   chain.forEach((seg, segIdx) => {
     const def     = ELEMENT_DEFS[seg.type];
     const p       = seg.props;
@@ -157,7 +149,7 @@ function buildXacro() {
 
     def.subLinks.forEach(sl => {
 
-      // ── holder: link only ────────────────────────────────────────────────
+      // ── holder: link only ──────────────────────────────────────────────────
       if (sl.role === 'holder') {
         body += `
   <link name="holder_link">
@@ -174,56 +166,60 @@ function buildXacro() {
         return;
       }
 
-      // ── Resolve joint type ───────────────────────────────────────────────
+      // ── joint type ─────────────────────────────────────────────────────────
       const slJtype = sl.jointAfter || 'fixed';
       const jtype   = (slJtype !== 'fixed' && p.jointType) ? p.jointType : slJtype;
       const isDOF   = jtype !== 'fixed';
 
-      // ── Child link name ──────────────────────────────────────────────────
-      const childName = sl.role === 'pen_holder'  ? 'pen_holder_link'
-                      : sl.role === 'tool_flange' ? 'tool_flange_link'
-                      : `link_${linkCounter++}`;
-
-      // ── Axis + limits ────────────────────────────────────────────────────
+      // ── axis + limits ──────────────────────────────────────────────────────
       const axisLimit = isDOF ? `
     <axis xyz="${sl.jointAxis || '0 0 1'}"/>
     <limit effort="${f(p.effort ?? 10)}" lower="${f(p.lower ?? -1.25)}" upper="${f(p.upper ?? 1.20)}" velocity="${f(p.velocity ?? 1.0)}"/>` : '';
 
-      // ── Per-role logic ───────────────────────────────────────────────────
+      // ── child name (always unique) ─────────────────────────────────────────
+      const childName = sl.role === 'pen_holder'  ? `pen_holder_link_${linkCounter++}`
+                      : sl.role === 'tool_flange' ? `tool_flange_link_${linkCounter++}`
+                      : `link_${linkCounter++}`;
+
+      // ── per-role ───────────────────────────────────────────────────────────
       switch (sl.role) {
 
-        // ── motor_assembly_p ───────────────────────────────────────────────
+        // ── motor_assembly_p ─────────────────────────────────────────────────
         case 'motor_assembly_p': {
           let originStr, visRpy;
-          if (isFirstMotorAssembly) {
+          if (afterPostPrismatic) {
+            // Coming from passive's intermediate link after a post-prismatic passive
+            originStr          = `<origin xyz="0 0 0" rpy="0 0 \${${phiInfo.main}}"/>`;
+            visRpy             = '3.14 0 0';
+            afterPostPrismatic = false;
+            isFirstMotorAssembly = false;
+            // NOTE: do NOT set isFirstPrismatic — the rack that follows is always SUBSEQ
+          } else if (isFirstMotorAssembly) {
             originStr = `<origin xyz="0.0 0 \${j1_z}" rpy="0 \${${phiInfo.main}} 0"/>`;
             visRpy    = '1.57 0 0';
             isFirstMotorAssembly = false;
-            isFirstPrismatic = true;
+            isFirstPrismatic     = true;
           } else {
             originStr = `<origin xyz="0.036 0 0" rpy="0 0 \${${phiInfo.main}}"/>`;
             visRpy    = '3.14 0 0';
           }
-          const jName = `config_joint_${cfgIdx++}`;
-          emitJointLink(jName, jtype, parentLink, childName, originStr, axisLimit, sl.mesh, visRpy);
+          emitJointLink(`config_joint_${cfgIdx++}`, jtype, parentLink, childName, originStr, axisLimit, sl.mesh, visRpy);
           parentLink = childName;
           prevRole   = sl.role;
           break;
         }
 
-        // ── motor_assembly ─────────────────────────────────────────────────
+        // ── motor_assembly ───────────────────────────────────────────────────
         case 'motor_assembly': {
-          // If we just came out of postPrismatic passive block,
-          // the motor_assembly was already emitted there — skip it
-          if (afterPostPrismatic) {
-            // don't emit, don't increment cfgIdx
-            // just update parentLink to what the passive block set it to
-            prevRole = sl.role;
-            break;
-          }
-          
           let originStr, visRpy;
-          if (isFirstMotorAssembly) {
+          if (afterPostPrismatic) {
+            // Coming from passive's intermediate link after a post-prismatic passive
+            originStr          = `<origin xyz="0 0 0" rpy="0 0 \${${phiInfo.main}}"/>`;
+            visRpy             = '0 0 0';
+            afterPostPrismatic  = false;
+            afterPrismaticMotor = true;   // active that follows needs special origin
+            isFirstMotorAssembly = false;
+          } else if (isFirstMotorAssembly) {
             originStr = `<origin xyz="0 0 \${j1_z}" rpy="0 \${${phiInfo.main}} 0"/>`;
             visRpy    = '1.57 0 0';
             isFirstMotorAssembly = false;
@@ -231,23 +227,27 @@ function buildXacro() {
             originStr = `<origin xyz="0.036 0 0" rpy="0 \${${phiInfo.main}} 0"/>`;
             visRpy    = '3.14 0 0';
           }
-          const jName = `config_joint_${cfgIdx++}`;
-          emitJointLink(jName, jtype, parentLink, childName, originStr, axisLimit, sl.mesh, visRpy);
+          emitJointLink(`config_joint_${cfgIdx++}`, jtype, parentLink, childName, originStr, axisLimit, sl.mesh, visRpy);
           parentLink = childName;
           prevRole   = sl.role;
           break;
         }
 
-        // ── active ─────────────────────────────────────────────────────────
+        // ── active ───────────────────────────────────────────────────────────
         case 'active': {
           let originStr;
-          if (isFirstRevolute && jtype === 'revolute' && !afterPostPrismatic) {
-            originStr = `<origin xyz="0.019500 0 -0.0040" rpy="3.140 0 0"/>`;
-            isFirstRevolute = false;
+          if (afterPrismaticMotor) {
+            originStr           = `<origin xyz="0.019500 -0.003 0.000" rpy="1.57 0 0"/>`;
+            afterPrismaticMotor = false;
+            isFirstRevolute     = false;
           } else if (afterPostPrismatic) {
-            originStr = `<origin xyz="0.019500 -0.003 0.000" rpy="1.57 0 0"/>`;
+            // active directly after rack (no motor_assembly in between)
+            originStr          = `<origin xyz="0.019500 -0.003 0.000" rpy="1.57 0 0"/>`;
             afterPostPrismatic = false;
             isFirstRevolute    = false;
+          } else if (isFirstRevolute && jtype === 'revolute') {
+            originStr       = `<origin xyz="0.019500 0 -0.0040" rpy="3.140 0 0"/>`;
+            isFirstRevolute = false;
           } else {
             originStr = `<origin xyz="0.019500 0.0040 0" rpy="-1.57 0 0"/>`;
             if (jtype === 'revolute') isFirstRevolute = false;
@@ -259,79 +259,81 @@ function buildXacro() {
           break;
         }
 
-        // ── rack ───────────────────────────────────────────────────────────
+        // ── rack ─────────────────────────────────────────────────────────────
         case 'rack': {
           let originStr;
           if (isFirstPrismatic) {
-            originStr = `<origin xyz="0.045 0 0.030" rpy="1.570 0 1.57"/>`;
+            originStr        = `<origin xyz="0.045 0 0.030" rpy="1.570 0 1.57"/>`;
             isFirstPrismatic = false;
           } else {
             originStr = `<origin xyz="0.045 -0.030 0.0" rpy="3.14 -1.57 0"/>`;
           }
-          const jName = `joint_${dofIdx++}`;
-          emitJointLink(jName, jtype, parentLink, childName, originStr, axisLimit, sl.mesh, '0 0 0');
-          lastRackName = childName;
+          emitJointLink(`joint_${dofIdx++}`, jtype, parentLink, childName, originStr, axisLimit, sl.mesh, '0 0 0');
           parentLink    = childName;
           postPrismatic = true;
           prevRole      = sl.role;
           break;
         }
 
-        // ── passive ────────────────────────────────────────────────────────
+        // ── passive ──────────────────────────────────────────────────────────
         case 'passive': {
           if (postPrismatic) {
-            // ── Post-prismatic passive: 3-part block ───────────────────────
-            // Part 1: passive hirth joint + link
-            const passiveJName = `config_joint_${cfgIdx++}`;
-            const passiveOrigin = `<origin xyz="0 0 0.0036" rpy="0 0 \${${phiInfo.main}}"/>`;
-            emitJointLink(passiveJName, 'fixed', parentLink, childName, passiveOrigin, '', sl.mesh, '0 0 0');
+            // 2-part block: passive hirth + empty intermediate
+            // The motor_assembly / motor_assembly_p segment that follows
+            // handles itself via the afterPostPrismatic flag.
 
-            // Part 2: intermediate empty link
-            const intName  = `${childName}_int`;
-            const intJName = `config_joint_${cfgIdx++}`;
-            emitEmptyLink(intJName, childName, intName, `<origin xyz="0 0 0.036" rpy="0 -1.5 0"/>`);
+            // Part 1: passive hirth
+            emitJointLink(
+              `config_joint_${cfgIdx++}`, 'fixed', parentLink, childName,
+              `<origin xyz="0 0 0.0036" rpy="0 0 \${${phiInfo.main}}"/>`,
+              '', sl.mesh, '0 0 0'
+            );
 
-            // Part 3: motor_assembly link with phi as yaw (uses NEXT segment's phi)
-            // The next segment in the chain should be a joint_revolute —
-            // we look ahead to get its phi
-            const nextSegIdx  = segIdx + 1;
-            const nextPhiInfo = segPhiMap[nextSegIdx];
-            const motorName   = `link_${linkCounter++}`;
-            const motorJName  = `config_joint_${cfgIdx++}`;
-            const motorOrigin = `<origin xyz="0 0 0" rpy="0 0 \${${nextPhiInfo?.main ?? phiInfo.main}}"/>`;
-            emitJointLink(motorJName, 'fixed', intName, motorName, motorOrigin, '', 'motor_assembly.dae', '0 0 0');
+            // Part 2: empty intermediate
+            const intName = `${childName}_int`;
+            emitEmptyLink(
+              `config_joint_${cfgIdx++}`, childName, intName,
+              `<origin xyz="0 0 0.036" rpy="0 -1.5 0"/>`
+            );
 
-            parentLink       = motorName;
-            postPrismatic    = false;
+            parentLink         = intName;
+            postPrismatic      = false;
             afterPostPrismatic = true;
-            prevRole         = sl.role;
+            prevRole           = sl.role;
 
           } else {
-            // ── Normal revolute path ───────────────────────────────────────
-            const originStr = `<origin xyz="0.036 0 0" rpy="\${${phiInfo.main}} 0 0"/>`;
-            const jName     = `config_joint_${cfgIdx++}`;
-            emitJointLink(jName, 'fixed', parentLink, childName, originStr, '', sl.mesh, '0 1.57 0');
+            // Normal revolute path
+            emitJointLink(
+              `config_joint_${cfgIdx++}`, 'fixed', parentLink, childName,
+              `<origin xyz="0.036 0 0" rpy="\${${phiInfo.main}} 0 0"/>`,
+              '', sl.mesh, '0 1.57 0'
+            );
             parentLink = childName;
             prevRole   = sl.role;
           }
           break;
         }
 
-        // ── pen_holder ─────────────────────────────────────────────────────
+        // ── pen_holder ────────────────────────────────────────────────────────
         case 'pen_holder': {
-          const originStr = `<origin xyz="0 0.020 0.022" rpy="0 0 \${${phiInfo.penHolder ?? 'phi_1'}}"/>`;
-          const jName     = `config_joint_${cfgIdx++}`;
-          emitJointLink(jName, 'fixed', parentLink, childName, originStr, '', sl.mesh, '0 0 0');
+          emitJointLink(
+            `config_joint_${cfgIdx++}`, 'fixed', parentLink, childName,
+            `<origin xyz="0 0.020 0.022" rpy="0 0 \${${phiInfo.penHolder ?? 'phi_1'}}"/>`,
+            '', sl.mesh, '0 0 0'
+          );
           parentLink = childName;
           prevRole   = sl.role;
           break;
         }
 
-        // ── tool_flange / fallback ─────────────────────────────────────────
+        // ── tool_flange / fallback ────────────────────────────────────────────
         default: {
-          const originStr = `<origin xyz="0 0 0" rpy="0 0 \${${phiInfo.main ?? 'phi_1'}}"/>`;
-          const jName     = isDOF ? `joint_${dofIdx++}` : `config_joint_${cfgIdx++}`;
-          emitJointLink(jName, jtype, parentLink, childName, originStr, axisLimit, sl.mesh, '0 0 0');
+          const jName = isDOF ? `joint_${dofIdx++}` : `config_joint_${cfgIdx++}`;
+          emitJointLink(
+            jName, jtype, parentLink, childName,
+            `<origin xyz="0 0 0" rpy="0 0 \${${phiInfo.main ?? 'phi_1'}}"/>`,
+            axisLimit, sl.mesh, '0 0 0'
+          );
           parentLink = childName;
           prevRole   = sl.role;
           break;

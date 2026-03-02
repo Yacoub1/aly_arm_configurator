@@ -6,8 +6,6 @@
   <xacro:property name="phi_1" value="0.0000" />
   <xacro:property name="phi_2" value="1.5700" />
   <xacro:property name="phi_3" value="0.0000" />
-  <xacro:property name="phi_4" value="1.5700" />
-  <xacro:property name="phi_5" value="0.0000" />
 
   <link name="world"/>
 
@@ -46,60 +44,68 @@
   <joint name="config_joint_0" type="fixed">
     <parent link="holder_link"/>
     <child link="link_1"/>
-    <origin xyz="0 0 ${j1_z}" rpy="0 ${phi_1} 0"/>
+    <origin xyz="0.0 0 ${j1_z}" rpy="0 ${phi_1} 0"/>
   </joint>
 
   <link name="link_1">
     <visual>
       <origin xyz="0 0 0" rpy="1.57 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly.dae" scale="1 1 1"/></geometry>
+      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="1.57 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly.dae" scale="1 1 1"/></geometry>
+      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
     </collision>
   </link>
 
-  <joint name="joint_0" type="revolute">
+  <joint name="joint_0" type="prismatic">
     <parent link="link_1"/>
     <child link="link_2"/>
-    <origin xyz="0.019500 0 -0.0040" rpy="3.140 0 0"/>
+    <origin xyz="0.045 0 0.030" rpy="1.570 0 1.57"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10.0000" lower="-1.2500" upper="1.2000" velocity="1.0000"/>
+    <limit effort="10.0000" lower="0.0000" upper="0.0450" velocity="1.0000"/>
   </joint>
 
   <link name="link_2">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/rack_assebmly-Part.dae" scale="1 1 1"/></geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/lnk_active_0deg_hirth_18d0_V2_a2plus-Part.dae" scale="1 1 1"/></geometry>
+      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/rack_assebmly-Part.dae" scale="1 1 1"/></geometry>
     </collision>
   </link>
 
   <joint name="config_joint_1" type="fixed">
     <parent link="link_2"/>
     <child link="link_3"/>
-    <origin xyz="0.036 0 0" rpy="${phi_2} 0 0"/>
+    <origin xyz="0 0 0.0036" rpy="0 0 ${phi_2}"/>
   </joint>
 
   <link name="link_3">
     <visual>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/lnk_passive_0deg_hirth_18_V3-Body.dae" scale="1 1 1"/></geometry>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/lnk_passive_0deg_hirth_18_V3-Body.dae" scale="1 1 1"/></geometry>
     </collision>
   </link>
 
   <joint name="config_joint_2" type="fixed">
     <parent link="link_3"/>
+    <child link="link_3_int"/>
+    <origin xyz="0 0 0.036" rpy="0 -1.5 0"/>
+  </joint>
+
+  <link name="link_3_int"/>
+
+  <joint name="config_joint_3" type="fixed">
+    <parent link="link_3_int"/>
     <child link="link_4"/>
-    <origin xyz="0.036 0 0" rpy="0 0 ${phi_3}"/>
+    <origin xyz="0 0 0" rpy="0 0 ${phi_3}"/>
   </joint>
 
   <link name="link_4">
@@ -122,67 +128,6 @@
   </joint>
 
   <link name="link_5">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/rack_assebmly-Part.dae" scale="1 1 1"/></geometry>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/rack_assebmly-Part.dae" scale="1 1 1"/></geometry>
-    </collision>
-  </link>
-
-  <joint name="config_joint_3" type="fixed">
-    <parent link="link_5"/>
-    <child link="link_6"/>
-    <origin xyz="0 0 0.0036" rpy="0 0 ${phi_4}"/>
-  </joint>
-
-  <link name="link_6">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/lnk_passive_0deg_hirth_18_V3-Body.dae" scale="1 1 1"/></geometry>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/lnk_passive_0deg_hirth_18_V3-Body.dae" scale="1 1 1"/></geometry>
-    </collision>
-  </link>
-
-  <joint name="config_joint_4" type="fixed">
-    <parent link="link_6"/>
-    <child link="link_6_int"/>
-    <origin xyz="0 0 0.036" rpy="0 -1.5 0"/>
-  </joint>
-
-  <link name="link_6_int"/>
-
-  <joint name="config_joint_5" type="fixed">
-    <parent link="link_6_int"/>
-    <child link="link_7"/>
-    <origin xyz="0 0 0" rpy="0 0 ${phi_5}"/>
-  </joint>
-
-  <link name="link_7">
-    <visual>
-      <origin xyz="0 0 0" rpy="3.14 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="3.14 0 0"/>
-      <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/motor_assembly_presmatic_joint.dae" scale="1 1 1"/></geometry>
-    </collision>
-  </link>
-
-  <joint name="joint_2" type="prismatic">
-    <parent link="link_7"/>
-    <child link="link_8"/>
-    <origin xyz="0.045 -0.030 0.0" rpy="3.14 -1.57 0"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="10.0000" lower="0.0000" upper="0.0450" velocity="1.0000"/>
-  </joint>
-
-  <link name="link_8">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry><mesh filename="file:///home/aayacoub/Downloads/AlyRobotics/aly_arm_configurator/backend/meshes/rack_assebmly-Part.dae" scale="1 1 1"/></geometry>
